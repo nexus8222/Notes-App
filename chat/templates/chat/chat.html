@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anonymous Chat - Talk to Strangers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a5568;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .status-bar {
+            background: #f7fafc;
+            padding: 15px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fbb6ce;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: #68d391;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.you {
+            align-items: flex-end;
+        }
+
+        .message.stranger {
+            align-items: flex-start;
+        }
+
+        .message.system {
+            align-items: center;
+            text-align: center;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .message.you .message-content {
+            background: #4299e1;
+            color: white;
+        }
+
+        .message.stranger .message-content {
+            background: #e2e8f0;
+            color: #2d3748;
+        }
+
+        .message.system .message-content {
+            background: #fed7d7;
+            color: #c53030;
+            font-style: italic;
+            max-width: 90%;
+        }
+
+        .message-sender {
+            font-size: 12px;
+            margin-bottom: 5px;
+            color: #718096;
+            font-weight: 600;
+        }
+
+        .message-time {
+            font-size: 11px;
+            color: #a0aec0;
+            margin-top: 5px;
+        }
+
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 20px;
+            font-style: italic;
+            color: #718096;
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #cbd5e0;
+            animation: typing 1.4s infinite;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: #4299e1;
+        }
+
+        .message-input:disabled {
+            background: #f7fafc;
+            color: #a0aec0;
+        }
+
+        .send-btn, .next-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .send-btn {
+            background: #4299e1;
+            color: white;
+        }
+
+        .send-btn:hover:not(:disabled) {
+            background: #3182ce;
+        }
+
+        .send-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .next-btn {
+            background: #ed8936;
+            color: white;
+        }
+
+        .next-btn:hover:not(:disabled) {
+            background: #dd6b20;
+        }
+
+        .next-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .button-row {
+            display: flex;
+            justify-content: center;
+        }
+
+        .welcome-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: #718096;
+        }
+
+        .welcome-message h2 {
+            color: #4a5568;
+            margin-bottom: 15px;
+        }
+
+        .welcome-message p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .chat-container {
+                width: 95%;
+                height: 95vh;
+                border-radius: 10px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .input-row {
+                flex-direction: column;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+        }
+
+        /* Scrollbar styling */
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover {
+            background: #a0aec0;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="header">
+            <h1>Anonymous Chat</h1>
+            <p>Connect with strangers from around the world</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status">
+                <div class="status-dot" id="statusDot"></div>
+                <span id="statusText">Connecting...</span>
+            </div>
+            <div>
+                <span id="onlineCount">0</span> users online
+            </div>
+        </div>
+
+        <div class="messages" id="messages">
+            <div class="welcome-message">
+                <h2>Welcome to Anonymous Chat!</h2>
+                <p>You'll be matched with a random stranger for a private conversation.</p>
+                <p>Please be respectful and have fun chatting!</p>
+                <p><strong>Connecting you now...</strong></p>
+            </div>
+        </div>
+
+        <div class="typing-indicator" id="typingIndicator">
+            <span>Stranger is typing</span>
+            <div class="typing-dots">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-row">
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    class="message-input" 
+                    placeholder="Type your message..." 
+                    disabled
+                    maxlength="500"
+                >
+                <button id="sendBtn" class="send-btn" disabled>Send</button>
+            </div>
+            <div class="button-row">
+                <button id="nextBtn" class="next-btn" disabled>Find New Person</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ChatApp {
+            constructor() {
+                this.socket = null;
+                this.isConnected = false;
+                this.isMatched = false;
+                this.typingTimer = null;
+                this.isTyping = false;
+                
+                this.initializeElements();
+                this.connect();
+                this.attachEventListeners();
+                this.updateOnlineCount();
+            }
+
+            initializeElements() {
+                this.statusDot = document.getElementById('statusDot');
+                this.statusText = document.getElementById('statusText');
+                this.onlineCount = document.getElementById('onlineCount');
+                this.messages = document.getElementById('messages');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.nextBtn = document.getElementById('nextBtn');
+                this.typingIndicator = document.getElementById('typingIndicator');
+            }
+
+            connect() {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws/chat/`;
+                
+                this.socket = new WebSocket(wsUrl);
+
+                this.socket.onopen = () => {
+                    console.log('WebSocket connected');
+                    this.isConnected = true;
+                    this.updateStatus('Connected', 'connected');
+                };
+
+                this.socket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    this.handleMessage(data);
+                };
+
+                this.socket.onclose = (event) => {
+                    console.log('WebSocket disconnected');
+                    this.isConnected = false;
+                    this.isMatched = false;
+                    this.updateStatus('Disconnected', 'disconnected');
+                    this.disableInputs();
+                    
+                    // Try to reconnect after 3 seconds
+                    setTimeout(() => {
+                        if (!this.isConnected) {
+                            this.connect();
+                        }
+                    }, 3000);
+                };
+
+                this.socket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    this.updateStatus('Connection Error', 'error');
+                };
+            }
+
+            handleMessage(data) {
+                switch (data.type) {
+                    case 'status':
+                        this.updateStatus(data.message, data.status);
+                        if (data.status === 'connected') {
+                            this.isMatched = true;
+                            this.enableInputs();
+                            this.clearWelcomeMessage();
+                        } else if (data.status === 'waiting') {
+                            this.isMatched = false;
+                            this.disableInputs();
+                        }
+                        break;
+                        
+                    case 'message':
+                        this.displayMessage(data.message, data.sender, data.timestamp);
+                        break;
+                        
+                    case 'typing':
+                        this.showTypingIndicator(data.typing);
+                        break;
+                }
+            }
+
+            updateStatus(message, status) {
+                this.statusText.textContent = message;
+                
+                this.statusDot.className = 'status-dot';
+                if (status === 'connected') {
+                    this.statusDot.classList.add('connected');
+                }
+            }
+
+            displayMessage(message, sender, timestamp) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${sender}`;
+
+                const senderDiv = document.createElement('div');
+                senderDiv.className = 'message-sender';
+                senderDiv.textContent = sender === 'you' ? 'You' : 'Stranger';
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = message;
+
+                const timeDiv = document.createElement('div');
+                timeDiv.className = 'message-time';
+                const time = new Date(timestamp);
+                timeDiv.textContent = time.toLocaleTimeString();
+
+                messageDiv.appendChild(senderDiv);
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(timeDiv);
+
+                this.messages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            displaySystemMessage(message) {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message system';
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.textContent = message;
+
+                messageDiv.appendChild(contentDiv);
+                this.messages.appendChild(messageDiv);
+                this.scrollToBottom();
+            }
+
+            clearWelcomeMessage() {
+                const welcomeMsg = this.messages.querySelector('.welcome-message');
+                if (welcomeMsg) {
+                    welcomeMsg.remove();
+                }
+            }
+
+            enableInputs() {
+                this.messageInput.disabled = false;
+                this.sendBtn.disabled = false;
+                this.nextBtn.disabled = false;
+                this.messageInput.focus();
+            }
+
+            disableInputs() {
+                this.messageInput.disabled = true;
+                this.sendBtn.disabled = true;
+                this.nextBtn.disabled = true;
+            }
+
+            sendMessage() {
+                const message = this.messageInput.value.trim();
+                if (message && this.isConnected && this.isMatched) {
+                    this.socket.send(JSON.stringify({
+                        type: 'message',
+                        message: message
+                    }));
+                    this.messageInput.value = '';
+                    this.stopTyping();
+                }
+            }
+
+            findNewPerson() {
+                if (this.isConnected) {
+                    this.socket.send(JSON.stringify({
+                        type: 'next'
+                    }));
+                    this.clearChat();
+                    this.displaySystemMessage('Finding a new person to chat with...');
+                }
+            }
+
+            clearChat() {
+                const messages = this.messages.querySelectorAll('.message:not(.system)');
+                messages.forEach(msg => msg.remove());
+            }
+
+            startTyping() {
+                if (!this.isTyping && this.isMatched) {
+                    this.isTyping = true;
+                    this.socket.send(JSON.stringify({
+                        type: 'typing',
+                        typing: true
+                    }));
+                }
+
+                clearTimeout(this.typingTimer);
+                this.typingTimer = setTimeout(() => {
+                    this.stopTyping();
+                }, 2000);
+            }
+
+            stopTyping() {
+                if (this.isTyping) {
+                    this.isTyping = false;
+                    if (this.isConnected && this.isMatched) {
+                        this.socket.send(JSON.stringify({
+                            type: 'typing',
+                            typing: false
+                        }));
+                    }
+                }
+                clearTimeout(this.typingTimer);
+            }
+
+            showTypingIndicator(isTyping) {
+                this.typingIndicator.style.display = isTyping ? 'flex' : 'none';
+                if (isTyping) {
+                    this.scrollToBottom();
+                }
+            }
+
+            scrollToBottom() {
+                this.messages.scrollTop = this.messages.scrollHeight;
+            }
+
+            updateOnlineCount() {
+                // Simulate online count
+                const count = Math.floor(Math.random() * 500) + 100;
+                this.onlineCount.textContent = count.toLocaleString();
+                
+                // Update every 30 seconds
+                setTimeout(() => this.updateOnlineCount(), 30000);
+            }
+
+            attachEventListeners() {
+                // Send message
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                
+                // Send message on Enter
+                this.messageInput.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // Typing indicator
+                this.messageInput.addEventListener('input', () => {
+                    if (this.messageInput.value.trim()) {
+                        this.startTyping();
+                    } else {
+                        this.stopTyping();
+                    }
+                });
+
+                // Find new person
+                this.nextBtn.addEventListener('click', () => this.findNewPerson());
+
+                // Handle visibility change
+                document.addEventListener('visibilitychange', () => {
+                    if (document.hidden) {
+                        this.stopTyping();
+                    }
+                });
+
+                // Handle page unload
+                window.addEventListener('beforeunload', () => {
+                    if (this.socket) {
+                        this.socket.close();
+                    }
+                });
+            }
+        }
+
+        // Initialize the chat app when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ChatApp();
+        });
+    </script>
+</body>
+</html>
