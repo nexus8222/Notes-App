@@ -2,8 +2,6 @@
 
 An **advanced, feature-rich note-taking web application** built with Django and using MongoDB as the backend database. This project goes far beyond basic CRUD operations by incorporating features like password protection, file attachments, markdown support, and more.
 
-![App Screenshot](https://user-images.githubusercontent.com/your-username/your-repo/your-image.png)
-
 ---
 
 ##  Features
