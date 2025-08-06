@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load note_extras %}
+
+{% block content %}
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h4 class="mb-0">
+      {{ note.title }}
+      {% if note.is_pinned %}
+        <i class="fas fa-thumbtack text-info ms-2" title="Pinned"></i>
+      {% endif %}
+    </h4>
+    <div class="d-flex align-items-center gap-2">
+      <a href="{% url 'note_edit' note.id %}" class="btn btn-outline-info btn-sm d-flex align-items-center gap-1">
+        <i class="fas fa-pencil-alt fa-fw"></i><span>Edit</span>
+      </a>
+      <a href="{% url 'note_delete' note.id %}" class="btn btn-outline-danger btn-sm d-flex align-items-center gap-1">
+        <i class="fas fa-trash-alt fa-fw"></i><span>Delete</span>
+      </a>
+    </div>
+  </div>
+
+  <div class="card-body note-content">
+    {{ note.rendered_content|safe }}
+  </div>
+
+  <div class="card-footer text-muted small">
+    <strong>Tags:</strong>
+    {% for tag in note.tags %}
+      <span class="badge bg-primary me-1">{{ tag }}</span>
+    {% empty %}
+      <span class="text-muted">No tags</span>
+    {% endfor %}
+  </div>
+
+  <!-- Attachments Section -->
+  {% if note.attachments %}
+  <div class="card-footer">
+    <h5><i class="fas fa-paperclip me-2"></i>Attachments</h5>
+    <ul class="list-group list-group-flush">
+      {% for file_path in note.attachments %}
+      <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+        <span><i class="fas fa-file me-2"></i> {{ file_path }}</span>
+        
+        <!-- THE FIX IS HERE - removed 'settings.' from MEDIA_URL -->
+        <a href="{{ MEDIA_URL }}{{ file_path }}" class="btn btn-outline-secondary btn-sm" target="_blank" download>
+          <i class="fas fa-download"></i> Download
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

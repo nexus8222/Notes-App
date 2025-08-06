@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-8">
+    <div class="card text-center shadow-sm border-danger">
+      <div class="card-header">
+        <i class="fas fa-exclamation-triangle fa-2x text-danger"></i>
+        <h4 class="mt-2">Confirm Deletion</h4>
+      </div>
+      <div class="card-body">
+        <p>Are you sure you want to permanently delete the note titled:</p>
+        <h5 class="mb-3">"{{ note.title }}"?</h5>
+        
+        <form method="post" class="mt-3">
+          {% csrf_token %}
+          
+          <!-- NEW: Conditionally show the password field -->
+          {% if note.password %}
+          <div class="mb-3 mx-auto" style="max-width: 300px;">
+            <label for="{{ form.password.id_for_label }}" class="form-label fw-bold">Password Required</label>
+            <p class="small text-muted">This note is protected. Please enter the password to confirm deletion.</p>
+            {{ form.password }}
+            {% if form.password.errors %}
+              <div class="invalid-feedback d-block">{{ form.password.errors.as_text|cut:"* " }}</div>
+            {% endif %}
+          </div>
+          {% endif %}
+          
+          <button type="submit" class="btn btn-danger">Yes, Delete It</button>
+          <a href="{% url 'note_detail' note.id %}" class="btn btn-secondary ms-2">Cancel</a>
+        </form>
+      </div>
+      <div class="card-footer text-muted small">
+        This action cannot be undone.
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
