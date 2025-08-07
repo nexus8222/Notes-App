@@ -62,7 +62,7 @@ An **advanced, feature-rich note-taking web application** built with Django and 
 
 ---
 
-## 🚀 Installation & Setup
+##  Installation & Setup
 
 Follow these steps to get the application running locally:
 
